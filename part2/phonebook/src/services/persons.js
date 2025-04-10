@@ -1,3 +1,4 @@
+//Service for managing the database of people in the app
 import axios from "axios";
 const baseUrl = "http://localhost:3001/persons"
 
