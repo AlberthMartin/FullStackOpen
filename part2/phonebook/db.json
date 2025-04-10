@@ -1,0 +1,44 @@
+{
+  "persons": [
+    {
+      "name": "Arto Hellas",
+      "number": "12",
+      "id": "1"
+    },
+    {
+      "name": "Testjappe",
+      "number": "0401915419",
+      "id": "2"
+    },
+    {
+      "name": "Göran",
+      "number": "0401859219",
+      "id": "3"
+    },
+    {
+      "name": "Matilda",
+      "number": "040968934",
+      "id": "4"
+    },
+    {
+      "name": "Person X",
+      "number": "040224536",
+      "id": "6"
+    },
+    {
+      "id": "9b05",
+      "name": "   Aalberth",
+      "number": "13"
+    },
+    {
+      "id": "09d0",
+      "name": "      aalberth martin",
+      "number": ""
+    },
+    {
+      "id": "15c5",
+      "name": "        aalberthfds",
+      "number": "123231314"
+    }
+  ]
+}
