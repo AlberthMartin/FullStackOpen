@@ -54,7 +54,7 @@ const PersonForm = ({addPerson, newName, newNumber, handleNumberChange, handleNa
     )
 }
 
-const Persons = ({persons,deletePerson}) =>{
+const Persons = ({persons,deletePerson, errorMessage}) =>{
   return(
     <div>
       <h2>Numbers</h2>
@@ -70,6 +70,18 @@ const Persons = ({persons,deletePerson}) =>{
 )
 }
 
+const Notification = ({message, messageType}) =>{
+  if(message === null) {
+    return null
+  }
+
+  return(
+    <div className={messageType}>
+      {message}
+    </div>
+  )
+}
+
 
 const App = () => {
   //Initially stored people
@@ -81,22 +93,15 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setFilter] = useState('')
 
-  useEffect(() => {
+  const [message, setMessage] = useState(null)
+  const [messageType, setMessageType] = useState(null)
 
+  useEffect(() => {
     personService
     .getAll()
     .then(response =>{
       setPersons(response.data)
     })
-    /*
-      console.log("effect (rendering persons)")
-    axios
-    .get('http://localhost:3001/persons')
-    .then(response =>{
-      console.log("promise fulfilled")
-      setPersons(response.data)
-    })
-      */
     
   }, [])
   console.log("render", persons.length, "persons");
@@ -126,6 +131,15 @@ const App = () => {
         .then((response)=>{
           setPersons(
             persons.map(pers => pers.id === existingPerson.id ? response.data : pers))
+          }).catch(error =>{
+            setMessageType("error")
+            setMessage(
+              `Information of ${existingPerson.name} has already been removed from server`
+            )
+            setTimeout(()=>{
+              setMessage(null)
+              setMessageType(null);
+            },5000)
           })
       }
       //Updated or kept number
@@ -144,14 +158,16 @@ const App = () => {
     .then(response =>{
       setPersons(persons.concat(response.data))
     })
+    
+    setMessageType("info");
 
-    /*
-    axios
-    .post("http://localhost:3001/persons", personObject)
-    .then(response =>{
-      setPersons(persons.concat(response.data))
-    })
-      */
+    setMessage(
+      `Added: ${personObject.name}`
+    )
+    setTimeout(()=>{
+      setMessage(null)
+      setMessageType(null)
+    }, 5000)
 
     //Clear input fealds
     setNewName("")
@@ -199,6 +215,7 @@ const App = () => {
 
   return (
     <div>
+      <Notification message={message} messageType={messageType}/>
 
       <AddFilter 
       renderFilteredPeople={renderFilteredPeople} 
