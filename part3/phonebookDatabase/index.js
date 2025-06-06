@@ -14,102 +14,101 @@ app.get("/api/persons", (request, response) =>{
 })
 
 //Add a new person to the database
-app.post("/api/persons", (req, res)=>{
-    const body = req.body
+app.post("/api/persons", async (req, res)=>{
+
+    const {name, number} = req.body
 
     //if number or name is missing
-    if(!body.number || !body.name){
+    if(!number || !name){
         return res.status(400).json({
             error: "number or name missing"
         })
     }
-    
-    //Create the new person in the phonebook
-    const person = new Person({
-        name: body.name,
-        number: body.number
-    })
 
-    person.save().then(savedPerson =>{
-        res.json(savedPerson)
-    })
+    //Check if the user exists in the database:
+    const existingPerson = await Person.findOne({name: name})
+
+    //if the person exists
+    if(existingPerson){
+        //Update number
+        existingPerson.number = number
+        const updated = await existingPerson.save()
+        return res.json(updated)
+    }
+        
+    //A new person is being added
+    else{
+        //Create the new person in the phonebook
+        const newPerson = new Person({
+        name: name,
+        number: number
+         })
+
+        newPerson.save().then(savedPerson =>{
+            return res.json(savedPerson)
+        })
+    }
+
 })
 
 //Get an individual person
-app.get("/api/persons/:id", (req, res)=>{
-    console.log(`Rendering ${req.params.id}`)
-    Person.findById(req.params.id).then(person=>{
-        res.json(person)
-    })
+app.get("/api/persons/:id", (req, res, next)=>{
+    Person.findById(req.params.id)
+        .then(person=>{
+            if(person){
+                res.json(person)
+            }else{
+                res.status(404).end()
+            }
+         })
+            .catch(error => next(error))
 })
 
-/*
-
-app.get("/info", (req, res)=>{
-    res.send(`
-        <p>Phonebook has info for ${persons.length} people </p>
-        <p>${Date()}</p>
-        `)
-})
-
-app.get("/api/persons/:id", (req, res) =>{
-    const id = req.params.id
-    const person = persons.find(person => person.id === id)
-
-    if(person){
-        res.json(person)
-    }else{
-        res.status(404).end()
-    }
-})
-
-app.delete("/api/persons/:id", (req,res)=>{
-    const id = req.params.id
-    persons = persons.filter(pers => pers.id !== id)
-
-    res.status(204).end()
-})
-
-
-app.post("/api/persons", (req, res)=>{
-    const body = req.body
-
-    //if number or name is missing
-    if(!body.number || !body.name){
-        return res.status(400).json({
-            error: "number or name missing"
+app.delete("/api/persons/:id", (req, res, next) =>{
+    Person.findByIdAndDelete(req.params.id)
+        .then(result =>{
+            res.status(204).end()
         })
-    }
-    //if name already exists in the data
-    if(persons.find(pers => pers.name === body.name)){
-        return res.status(400).json({
-            error: "name must be unique"
-        })
-    }
-    
-    //Create the new person in the phonebook
-    const person = {
-        //random number between 10-444
-        id: String(Math.floor(Math.random()*(444-10+1)+10)),
-        name: body.name,
-        number: body.number
-    }
-
-    persons = persons.concat(person)
-    
-    res.json(person)
-
-
+        .catch(error => next(error))
 })
 
-const generateId = () => {
-    const maxId = notes.length > 0 
-    ? Math.max(...notes.map(n=>Number(n.id)))
-    : 0
-    return String(maxId+1)
+app.put("/api/persons/:id", (req, res, next) =>{
+    const {name, number} = req.body
+
+    Person.findById(req.params.id)
+        .then(person =>{
+            if(!person){
+                return res.status(404).end()
+            }
+
+            person.name = name
+            person.number = number
+
+            return person.save().then((updatedPerson) =>{
+                res.json(updatedPerson)
+            })
+        })
+        .catch(error => next(error))
+})
+
+
+const unknownEndpoint = (req, res) =>{
+    res.status(404).send({error: "unknown endpoint"})
 }
 
-*/
+app.use(unknownEndpoint)
+
+const errorHandler = (error, req, res, next)=>{
+    console.error(error.message)
+
+    if(error.name === "CastError"){
+        return res.status(400).send({error: "malformatted id"})
+    }
+    next(error)
+}
+
+app.use(errorHandler)
+
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
