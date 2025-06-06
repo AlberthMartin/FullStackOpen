@@ -1,10 +1,12 @@
 require("dotenv").config()
 const express = require("express")
-const Person = require("./models/Person")
+
 
 const app = express()
+app.use(express.static('build'))
 
 app.use(express.json())
+const Person = require("./models/person")
 
 //Get the people from the database
 app.get("/api/persons", (request, response) =>{
@@ -14,7 +16,7 @@ app.get("/api/persons", (request, response) =>{
 })
 
 //Add a new person to the database
-app.post("/api/persons", async (req, res)=>{
+app.post("/api/persons", async (req, res, next)=>{
 
     const {name, number} = req.body
 
@@ -40,13 +42,14 @@ app.post("/api/persons", async (req, res)=>{
     else{
         //Create the new person in the phonebook
         const newPerson = new Person({
-        name: name,
-        number: number
+            name: name,
+            number: number
          })
 
         newPerson.save().then(savedPerson =>{
-            return res.json(savedPerson)
+            res.json(savedPerson)
         })
+        .catch(error => next(error))
     }
 
 })
@@ -103,6 +106,9 @@ const errorHandler = (error, req, res, next)=>{
 
     if(error.name === "CastError"){
         return res.status(400).send({error: "malformatted id"})
+    }
+    else if (error.name === "ValidationError") {
+        return res.status(400).json({error: error.message})
     }
     next(error)
 }

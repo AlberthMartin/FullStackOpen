@@ -157,7 +157,7 @@ const App = () => {
     .create(personObject)
     .then(response =>{
       setPersons(persons.concat(response.data))
-    })
+    
     
     setMessageType("info");
 
@@ -172,8 +172,22 @@ const App = () => {
     //Clear input fealds
     setNewName("")
     setNewNumber("")
+
+  })
+  .catch(error => {
+    setMessageType("error")
+    setMessage(error.response.data.error)
+    setTimeout(() =>{
+      setMessage(null)
+      setMessageType(null)
+    }, 5000)
+  })
+
   }
-  //delete och add borde flyttas till persons
+
+
+
+
   const deletePerson = (id) => {
 
     const result = window.confirm(`Are you sure you want to delete this person`)

@@ -18,8 +18,22 @@ mongoose.connect(url)
 
 //Create the database schema
 const personSchema = new mongoose.Schema({
-    name: String,
-    number: String,
+    name: {
+        type: String,
+        minlength: [3, "Name must be 3 or more characters"],
+        required: [true, "Name is required"]
+    },
+    number: {
+        type: String,
+        minlength: [8, "Number must be at least 8 characters"],
+        validate: {
+            validator: function(v){
+                return /^\d{2,3}-\d+$/.test(v)
+            },
+            message: props => `${props.value} is not a valid phone number, Format should be 040-1915419`       
+         },
+         required: [true, "Number is required"]
+    }
 })
 
 
