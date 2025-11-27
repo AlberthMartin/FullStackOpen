@@ -99,7 +99,6 @@ test("if title is missing respond with 400 Bad Request", async () => {
 
   //Should not be addeed, checking length
   assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
-
 });
 //4.12
 test("if url is missing respond with 400 Bad Request", async () => {
@@ -118,5 +117,51 @@ test("if url is missing respond with 400 Bad Request", async () => {
 
   //Should not be addeed, checking length
   assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
-
 });
+
+//4.13 deleting test
+test("deleting a blog with id", async () => {
+  const blogsAtStart = await helper.blogsInDb();
+  const blogToBeDeleted = blogsAtStart[0];
+
+  await api.delete(`/api/blogs/${blogToBeDeleted.id}`).expect(204);
+
+  const blogsAtEnd = await helper.blogsInDb();
+
+  const contents = blogsAtEnd.map((b) => b.title);
+  assert(!contents.includes(blogToBeDeleted.title));
+
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+});
+//4.14 updating test
+test("updating a blog", async() => {
+  const blogsAtStart = await helper.blogsInDb();
+  const blogToBeUpdated = blogsAtStart[0];
+
+  const newBlogInfo = {
+    title: "Test updating blog",
+    author: "updating blog",
+    url: "https://test",
+    likes: 4,
+  };
+
+  await api
+    .put(`/api/blogs/${blogToBeUpdated.id}`)
+    .send(newBlogInfo)
+    .expect(200)
+    .expect("Content-Type", /application\/json/);
+
+  const blogsAtEnd = await helper.blogsInDb();
+  //Same length
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+
+  // Find the updated one
+  const updatedBlog = blogsAtEnd.find(b => b.id === blogToBeUpdated.id);
+  
+  //See if it was updated
+  assert.strictEqual(updatedBlog.title, newBlogInfo.title);
+  assert.strictEqual(updatedBlog.author, newBlogInfo.author);
+  assert.strictEqual(updatedBlog.url, newBlogInfo.url);
+  assert.strictEqual(updatedBlog.likes, newBlogInfo.likes);
+  
+})
