@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const PORT = 3003
-const MONGODB_URI = "mongodb+srv://alberthmartin01_db_user:NTS2NskLUHwuk7aY@fullstack-test.9phcepd.mongodb.net/?appName=fullstack-test"
+const PORT = process.env.PORT
+const MONGODB_URI = process.env.MONGODB_URI
 
 module.exports = { MONGODB_URI, PORT }
