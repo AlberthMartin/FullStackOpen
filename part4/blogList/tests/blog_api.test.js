@@ -52,11 +52,71 @@ test("a blog can be added", async () => {
 
   const title = blogsAtEnd.map((n) => n.title);
 
-  assert(title.includes("Test blog"))
+  assert(title.includes("Test blog"));
 });
 
 test("all blogs are returned", async () => {
   const response = await api.get("/api/blogs");
   console.log(response);
   assert.strictEqual(response.body.length, helper.initialBlogs.length);
+});
+//4.11
+test("if likes is missing add value 0 to it", async () => {
+  const newBlog = {
+    title: "Blog without likes",
+    author: "Alberth",
+    url: "https://test",
+    //likes missing
+  };
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const blogsAtEnd = await helper.blogsInDb();
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
+
+  const addedBlog = blogsAtEnd.find((b) => b.title === "Blog without likes");
+  assert.strictEqual(addedBlog.likes, 0);
+});
+
+//4.12
+test("if title is missing respond with 400 Bad Request", async () => {
+  const newBlog = {
+    //title missing
+    author: "Alberth",
+    url: "https://test",
+    likes: 4,
+  };
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(400)
+    .expect("Content-Type", /application\/json/);
+
+  const blogsAtEnd = await helper.blogsInDb();
+
+  //Should not be addeed, checking length
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+
+});
+//4.12
+test("if url is missing respond with 400 Bad Request", async () => {
+  const newBlog = {
+    title: "Test blog, url missing",
+    author: "Alberth",
+    likes: 4,
+  };
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(400)
+    .expect("Content-Type", /application\/json/);
+
+  const blogsAtEnd = await helper.blogsInDb();
+
+  //Should not be addeed, checking length
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+
 });
