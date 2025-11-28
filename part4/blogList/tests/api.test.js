@@ -5,6 +5,8 @@ const supertest = require("supertest");
 const helper = require("./test_helper");
 const app = require("../app");
 const Blog = require("../models/blog");
+const User = require("../models/user");
+const bcrypt = require("bcrypt");
 
 const api = supertest(app);
 
@@ -165,3 +167,78 @@ test("updating a blog", async() => {
   assert.strictEqual(updatedBlog.likes, newBlogInfo.likes);
   
 })
+
+// User tests
+describe("when there is initially one user in the db", () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+
+    const passwordHash = await bcrypt.hash("mySecret", 10);
+    const user = new User({ username: "rootttt1", passwordHash });
+    await user.save();
+  });
+
+  test("creation succeeds with a fresh username", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const newUser = {
+      username: "alberthm",
+      name: "Alberth Martin",
+      password: "alberth",
+    };
+
+    await api
+      .post("/api/users")
+      .send(newUser)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const usersAtEnd = await helper.usersInDb();
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1);
+
+    const usernames = usersAtEnd.map((u) => u.username);
+    assert(usernames.includes(newUser.username));
+  });
+
+  test("creation fails with proper stauscode and message if username already exists", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const newUser = {
+      username: "rootttt1",
+      name: "albert",
+      password: "blabla",
+    };
+
+    const result = await api
+      .post("/api/users")
+      .send(newUser)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    const usersAtEnd = await helper.usersInDb();
+    assert(result.body.error.includes("expected username to be unique"));
+
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length);
+  });
+
+  test("creation fails with proper stauscode and message if password is to short, less than 3 chars", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const newUser = {
+      username: "shortPasswod",
+      name: "albert",
+      password: "b",
+    };
+
+    const result = await api
+      .post("/api/users")
+      .send(newUser)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    const usersAtEnd = await helper.usersInDb();
+    assert(result.body.error.includes("password must be at least 3 characters long"));
+
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length);
+  });
+});
